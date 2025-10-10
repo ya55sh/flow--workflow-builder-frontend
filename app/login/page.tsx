@@ -8,17 +8,6 @@ export default function Login() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 
-	// useEffect(() => {
-	// 	// Google callback: runs when user signs in
-	// 	(window as any).handleCredentialResponse = (response: any) => {
-	// 		console.log("Encoded JWT ID token:", response.credential);
-
-	// 		// Optionally decode it client-side
-	// 		const payload = JSON.parse(atob(response.credential.split(".")[1]));
-	// 		console.log("Decoded payload:", payload);
-	// 	};
-	// }, []);
-
 	const handleSubmit = (e: React.FormEvent) => {
 		console.log("FORM CLICKED", email, password);
 		e.preventDefault();
@@ -77,7 +66,7 @@ export default function Login() {
 							</p>
 						</div>
 						<div>
-							<Auth />
+							<Auth mode={`login`} />
 						</div>
 					</form>
 				</div>

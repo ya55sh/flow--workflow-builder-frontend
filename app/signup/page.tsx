@@ -79,7 +79,7 @@ export default function Signup() {
 							</p>
 						</div>
 						<div>
-							<Auth />
+							<Auth mode={`signup`} />
 						</div>
 					</form>
 				</div>
