@@ -1,34 +1,46 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { setStagedApp, addOrUpdateStagedApp, updateStep } from "../features/workflowSlice";
 
-interface DropdownProps {
-	apps: any[]; // or a more specific type if you have it
-	onAppSelect: (stepId: string, appId: string) => void;
-}
+type DropdownProps = {
+	stepId: string;
+};
 
-export default function Dropdown({ apps, onAppSelect }: DropdownProps) {
-	const [selectedValue, setSelectedValue] = useState("option1"); // Initial selected value
+export default function Dropdown({ stepId }: DropdownProps) {
+	const dispatch = useDispatch();
+	const steps = useSelector((state: any) => state.workflowApp.steps);
+	const stagedApp = useSelector((state: any) => state.workflowApp.stagedApp);
+	const apps = useSelector((state: any) => state.workflowApp.apps);
 
 	const handleChange = (event) => {
-		setSelectedValue(event.target.value);
+		const selectedAppName = event.target.value;
+
+		dispatch(setStagedApp({ stepId: stepId, appName: selectedAppName }));
+
+		if (steps.length === 1) {
+			dispatch(updateStep({ stepId: stepId, stepType: "trigger", appName: selectedAppName }));
+		} else {
+			dispatch(updateStep({ stepId: stepId, stepType: "action", appName: selectedAppName }));
+		}
 	};
+
+	useEffect(() => {
+		console.log("stagedApp updated:", stagedApp);
+		console.log("steps updated:", steps);
+	}, [steps]);
 
 	return (
 		<div className="flex flex-col">
 			<label htmlFor="my-dropdown">Choose an option :</label>
-			<select
-				id="my-dropdown"
-				value={selectedValue}
-				onChange={handleChange}
-				className="m-2 p-2 hover:cursor-pointer"
-			>
+			<select id="my-dropdown" className="m-2 p-2 hover:cursor-pointer">
 				{apps.map((app) => (
 					<option
-						onClick={() => onAppSelect("1", selectedValue)}
-						key={app.id}
-						value={app.id}
+						onClick={handleChange}
+						key={app.id + app.name}
+						value={app.appName}
 						className="p-4 m-2 hover:cursor-pointer border-2 border-indigo-500/50 rounded-lg"
 					>
-						{app.name}
+						{app.displayName}
 					</option>
 				))}
 			</select>

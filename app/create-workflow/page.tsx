@@ -6,30 +6,15 @@ import { useRouter } from "next/navigation";
 import { hasToken, isTokenExpired, removeToken } from "../utils/tokenUtils";
 import Link from "next/link";
 import AppCard from "../components/AppCard";
-
-// const token = localStorage.getItem("accessToken");
-
-type AppOption = {
-	id: string;
-	name: string;
-	icon?: React.ReactNode;
-};
-
-type WorkflowStep = {
-	id: string;
-	type: "trigger" | "action";
-	app?: string; // or more data depending on your AppCard
-};
+import { useDispatch, useSelector } from "react-redux";
+import { setApps } from "../features/workflowSlice";
 
 type StageKey = "setup" | "configure" | "test";
 
 export default function CreateWorkflow() {
-	const [steps, setSteps] = useState<WorkflowStep[]>([
-		{ id: "1", type: "trigger" }, // initial trigger card
-	]);
+	const dispatch = useDispatch();
 
-	const [apps, setApps] = useState<any[]>([]);
-	const [stageApps, setStageApps] = useState<any[]>([]);
+	const steps = useSelector((state: any) => state.workflowApp.steps);
 
 	useEffect(() => {
 		const fetchApps = async () => {
@@ -37,24 +22,12 @@ export default function CreateWorkflow() {
 			const data = await axios.get(`${process.env.NEXT_PUBLIC_URI}${process.env.NEXT_PUBLIC_GET_APPS_URI}`, {
 				headers: { Authorization: `Bearer ${token}` },
 			});
-			console.log("Apps data:", data.data);
 			if (data?.data) {
-				setApps(data.data);
+				dispatch(setApps(data.data));
 			}
 		};
 		fetchApps();
 	}, []);
-
-	function handleAppSelect(stepId: string, appId: string) {
-		setSteps((prevSteps) => prevSteps.map((step) => (step.id === stepId ? { ...step, app: appId } : step)));
-
-		console.log(`App ${appId} selected for step ${stepId}`);
-
-		const isLastStep = steps[steps.length - 1].id === stepId;
-		if (isLastStep) {
-			setSteps((prev) => [...prev, { id: `${prev.length + 1}`, type: "action" }]);
-		}
-	}
 
 	return (
 		<div className="min-h-screen min-w-900 flex flex-col gap-12 items-center justify-start p-4 m-2 bg-gray-50">
@@ -65,7 +38,7 @@ export default function CreateWorkflow() {
 				</button>
 
 				<button className="bg-gray-200 hover:bg-indigo-700 hover:text-white hover:cursor-pointer text-black font-semibold p-2 m-2 rounded-lg">
-					Save Workflow
+					Publish Workflow
 				</button>
 				<Link href={"/"}>
 					<button className="m-2 p-2 rounded-lg hover:cursor-pointer hover:bg-gray-200">Cancel</button>
@@ -74,7 +47,7 @@ export default function CreateWorkflow() {
 
 			<div className="min-h-screen border-gray-500/50 rounded-lg shadow-xl min-w-3xl">
 				{steps.map((step) => (
-					<AppCard key={step.id} apps={apps} onAppSelect={handleAppSelect} />
+					<AppCard key={step.stepId} stepId={step.stepId} stepType={step.stepType} />
 				))}
 			</div>
 		</div>

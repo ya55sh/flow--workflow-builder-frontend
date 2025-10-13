@@ -1,11 +1,22 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+
+export type Step = { stepId: string; stepType: string; appName?: string };
+
+export type StagedApp = {
+	stepId: string;
+	appName: string;
+	connected?: boolean;
+	accessToken?: string;
+	refreshToken?: string;
+	expiresAt?: number;
+};
 
 type AppState = {
 	counter: number;
 	user: any;
 	apps: any[];
-	steps: any[];
-	stagedApp: any[];
+	steps: Step[]; // or more specific type
+	stagedApp: StagedApp[];
 };
 
 export const appSlice = createSlice({
@@ -14,33 +25,92 @@ export const appSlice = createSlice({
 		counter: 0,
 		user: null,
 		apps: [],
-		steps: [],
+		steps: [{ stepId: "1", stepType: "trigger" }],
 		stagedApp: [],
 	} as AppState,
 	reducers: {
 		increment: (state) => {
 			state.counter += 1;
 		},
-		setUser: (state, action) => {
+
+		setUser: (state, action: PayloadAction<any>) => {
 			state.user = action.payload;
 		},
-		setApps: (state, action) => {
+
+		setApps: (state, action: PayloadAction<any[]>) => {
 			state.apps = action.payload;
 		},
-		addStep: (state, action) => {
+
+		setStep: (state, action) => {
 			state.steps.push(action.payload);
 		},
+
+		updateStep: (state, action: PayloadAction<Step>) => {
+			const { stepId, appName } = action.payload;
+			state.steps = state.steps.map((step) => (step.stepId === stepId ? { ...step, appName } : step));
+		},
+
 		removeStep: (state, action) => {
-			state.steps = state.steps.filter((step) => step.id !== action.payload);
+			if (state.steps.length > 1) state.steps = state.steps.filter((step) => step.stepId !== action.payload);
 		},
-		setStagedApp: (state, action) => {
-			state.stagedApp.push(action.payload);
+
+		setStagedApp: (state, action: PayloadAction<StagedApp>) => {
+			console.log("Setting stagedApp:", action.payload);
+			const { stepId, appName } = action.payload;
+			const app = state.stagedApp.find((a) => a.stepId === stepId);
+
+			if (app) {
+				app.appName = appName;
+			} else {
+				state.stagedApp.push(action.payload);
+			}
 		},
-		removeStagedApp: (state, action) => {
-			state.apps = state.apps.filter((app) => app.id !== action.payload);
+
+		addOrUpdateStagedApp: (state, action: PayloadAction<StagedApp>) => {
+			const index = state.stagedApp.findIndex((a) => a.appName === action.payload.appName);
+			if (index > -1) {
+				state.stagedApp[index] = { ...state.stagedApp[index], ...action.payload };
+			} else {
+				state.stagedApp.push(action.payload);
+			}
+		},
+
+		removeStagedApp: (state, action: PayloadAction<StagedApp>) => {
+			const { stepId, appName } = action.payload;
+			state.stagedApp = state.stagedApp.filter((a) => a.stepId !== stepId);
+		},
+
+		updateAppTokens: (
+			state,
+			action: PayloadAction<{
+				name: string;
+				accessToken?: string;
+				refreshToken?: string;
+				expiresAt?: number;
+			}>
+		) => {
+			const app = state.stagedApp.find((a) => a.appName === action.payload.name);
+			if (app) {
+				if (action.payload.accessToken) app.accessToken = action.payload.accessToken;
+				if (action.payload.refreshToken) app.refreshToken = action.payload.refreshToken;
+				if (action.payload.expiresAt) app.expiresAt = action.payload.expiresAt;
+				app.connected = true;
+			}
 		},
 	},
 });
 
-export const { increment, setUser, setApps, addStep } = appSlice.actions;
+export const {
+	increment,
+	setUser,
+	setApps,
+	setStep,
+	updateStep,
+	removeStep,
+	setStagedApp,
+	addOrUpdateStagedApp,
+	removeStagedApp,
+	updateAppTokens,
+} = appSlice.actions;
+
 export default appSlice.reducer;
