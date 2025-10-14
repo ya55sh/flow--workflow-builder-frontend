@@ -11,12 +11,19 @@ export type StagedApp = {
 	expiresAt?: number;
 };
 
+export type CardState = {
+	stepId: string;
+	stepType: string;
+};
+
 type AppState = {
 	counter: number;
 	user: any;
 	apps: any[];
 	steps: Step[]; // or more specific type
 	stagedApp: StagedApp[];
+	cardStatus: boolean;
+	cardState: CardState;
 };
 
 export const appSlice = createSlice({
@@ -27,6 +34,8 @@ export const appSlice = createSlice({
 		apps: [],
 		steps: [{ stepId: "1", stepType: "trigger" }],
 		stagedApp: [],
+		cardStatus: false,
+		cardState: { stepId: "", stepType: "" },
 	} as AppState,
 	reducers: {
 		increment: (state) => {
@@ -55,7 +64,6 @@ export const appSlice = createSlice({
 		},
 
 		setStagedApp: (state, action: PayloadAction<StagedApp>) => {
-			console.log("Setting stagedApp:", action.payload);
 			const { stepId, appName } = action.payload;
 			const app = state.stagedApp.find((a) => a.stepId === stepId);
 
@@ -97,6 +105,14 @@ export const appSlice = createSlice({
 				app.connected = true;
 			}
 		},
+
+		setCardEnabled: (state, action: PayloadAction<boolean>) => {
+			state.cardStatus = action.payload;
+		},
+
+		setCardState: (state, action: PayloadAction<CardState>) => {
+			state.cardState = action.payload;
+		},
 	},
 });
 
@@ -111,6 +127,8 @@ export const {
 	addOrUpdateStagedApp,
 	removeStagedApp,
 	updateAppTokens,
+	setCardEnabled,
+	setCardState,
 } = appSlice.actions;
 
 export default appSlice.reducer;

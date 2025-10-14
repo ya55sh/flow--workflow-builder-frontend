@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import Dropdown from "./Dropdown";
+
 import { useSelector, useDispatch } from "react-redux";
-import { setStep, removeStep, removeStagedApp } from "../features/workflowSlice";
+import { setStep, removeStep, removeStagedApp, setCardEnabled, setCardState } from "../features/workflowSlice";
 
 interface AppCardProps {
 	stepId: string;
@@ -10,10 +11,20 @@ interface AppCardProps {
 
 export default function AppCard({ stepId, stepType }: AppCardProps) {
 	const dispatch = useDispatch();
+	const cardStatus = useSelector((state: any) => state.workflowApp.cardState);
 	const steps = useSelector((state: any) => state.workflowApp.steps);
 	const stagedApp = useSelector((state: any) => state.workflowApp.stagedApp);
+	const isCardActive = stagedApp.some((app) => app.stepId === stepId);
+
+	function handleCardClick(event) {
+		event.stopPropagation();
+		console.log("Card clicked");
+		dispatch(setCardEnabled(true));
+		dispatch(setCardState({ stepId, stepType }));
+	}
 
 	function handleUpdateStep(event) {
+		event.stopPropagation();
 		const actionType = event.currentTarget.dataset.action;
 
 		if (actionType === "remove-step") {
@@ -31,8 +42,11 @@ export default function AppCard({ stepId, stepType }: AppCardProps) {
 
 	return (
 		<div className="flex flex-col items-center justify-start p-2 m-2">
-			<div className="bg-white rounded-lg shadow-md p-2 m-3 min-w-3xs max-w-2xs border-1">
-				<div className="relative flex justify-between items-center hover:cursor-pointer">
+			<div
+				className="bg-white rounded-lg shadow-md p-2 m-3 min-w-3xs max-w-2xs border-1 hover:cursor-pointer hover:shadow-xl hover:ring-2 hover:ring-indigo-500/90 hover:scale-105 transition-transform duration-200"
+				onClick={isCardActive ? handleCardClick : undefined}
+			>
+				<div className="relative ">
 					<h2 className="text-xl font-semibold m-2">
 						{stepType === "action" ? `Select an action` : `Select a trigger`}
 					</h2>
@@ -43,7 +57,7 @@ export default function AppCard({ stepId, stepType }: AppCardProps) {
 				<button
 					data-action="add-step"
 					onClick={handleUpdateStep}
-					className="border-2 rounded-lg border-gray-500/50 m-2 p-2 hover:cursor-pointer hover:border-gray-200/50 hover:shadow-xl"
+					className="border-2 rounded-lg border-gray-500/50 m-2 p-2 hover:cursor-pointer hover:border-indigo-500/90 hover:shadow-xl transition duration-200"
 				>
 					➕
 				</button>
@@ -52,7 +66,7 @@ export default function AppCard({ stepId, stepType }: AppCardProps) {
 						data-action="remove-step"
 						data-step-id={stepId}
 						onClick={handleUpdateStep}
-						className="border-2 rounded-lg border-gray-500/50 m-2 p-2 hover:cursor-pointer hover:border-gray-200/50 hover:shadow-xl"
+						className="border-2 rounded-lg border-gray-500/50 m-2 p-2 hover:cursor-pointer hover:border-indigo-500/90 hover:shadow-xl transition duration-200"
 					>
 						➖
 					</button>

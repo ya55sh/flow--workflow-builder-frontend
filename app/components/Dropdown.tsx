@@ -9,10 +9,10 @@ type DropdownProps = {
 export default function Dropdown({ stepId }: DropdownProps) {
 	const dispatch = useDispatch();
 	const steps = useSelector((state: any) => state.workflowApp.steps);
-	const stagedApp = useSelector((state: any) => state.workflowApp.stagedApp);
 	const apps = useSelector((state: any) => state.workflowApp.apps);
 
 	const handleChange = (event) => {
+		event.stopPropagation();
 		const selectedAppName = event.target.value;
 
 		dispatch(setStagedApp({ stepId: stepId, appName: selectedAppName }));
@@ -24,15 +24,10 @@ export default function Dropdown({ stepId }: DropdownProps) {
 		}
 	};
 
-	useEffect(() => {
-		console.log("stagedApp updated:", stagedApp);
-		console.log("steps updated:", steps);
-	}, [steps]);
-
 	return (
 		<div className="flex flex-col">
 			<label htmlFor="my-dropdown">Choose an option :</label>
-			<select id="my-dropdown" className="m-2 p-2 hover:cursor-pointer">
+			<select id="my-dropdown" className="m-2 p-2 border-1 rounded-lg hover:cursor-pointer">
 				{apps.map((app) => (
 					<option
 						onClick={handleChange}
