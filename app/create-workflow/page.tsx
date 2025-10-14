@@ -13,9 +13,15 @@ type StageKey = "setup" | "configure" | "test";
 export default function CreateWorkflow() {
 	const dispatch = useDispatch();
 
-	const steps = useSelector((state: any) => state.workflowApp.steps);
+	const steps: Step[] = useSelector((state: any) => state.workflowApp.steps);
 	const { stepId, stepType } = useSelector((state: any) => state.workflowApp.cardState);
 	const cardStatus = useSelector((state: any) => state.workflowApp.cardStatus);
+
+	interface Step {
+		stepId: string;
+		stepType: string;
+		// Add other properties if needed
+	}
 
 	useEffect(() => {
 		const fetchApps = async () => {
@@ -54,7 +60,7 @@ export default function CreateWorkflow() {
 			</div>
 
 			<div className="min-h-screen border-gray-500/50 rounded-lg shadow-xl min-w-3xl">
-				{steps.map((step) => (
+				{steps.map((step: Step) => (
 					<AppCard key={step.stepId} stepId={step.stepId} stepType={step.stepType} />
 				))}
 			</div>

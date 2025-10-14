@@ -14,25 +14,43 @@ export default function AppCard({ stepId, stepType }: AppCardProps) {
 	const cardStatus = useSelector((state: any) => state.workflowApp.cardState);
 	const steps = useSelector((state: any) => state.workflowApp.steps);
 	const stagedApp = useSelector((state: any) => state.workflowApp.stagedApp);
-	const isCardActive = stagedApp.some((app) => app.stepId === stepId);
+	interface StagedApp {
+		stepId: string;
+		appName: string;
+	}
 
-	function handleCardClick(event) {
+	const isCardActive: boolean = (stagedApp as StagedApp[]).some((app: StagedApp) => app.stepId === stepId);
+
+	interface HandleCardClickEvent extends React.MouseEvent<HTMLDivElement> {}
+
+	interface UpdateStepEvent extends React.MouseEvent<HTMLButtonElement> {
+		currentTarget: (EventTarget & HTMLButtonElement) & {
+			dataset: DOMStringMap;
+		};
+	}
+
+	interface NewStep {
+		stepId: string;
+		stepType: string;
+	}
+
+	function handleCardClick(event: HandleCardClickEvent): void {
 		event.stopPropagation();
 		console.log("Card clicked");
 		dispatch(setCardEnabled(true));
 		dispatch(setCardState({ stepId, stepType }));
 	}
 
-	function handleUpdateStep(event) {
+	function handleUpdateStep(event: UpdateStepEvent): void {
 		event.stopPropagation();
 		const actionType = event.currentTarget.dataset.action;
 
 		if (actionType === "remove-step") {
-			if (steps.length > 1) dispatch(removeStep(event.currentTarget.dataset.stepId));
+			if (steps.length > 1) dispatch(removeStep(event.currentTarget.dataset.stepId as string));
 			dispatch(removeStagedApp({ stepId: stepId, appName: "" }));
 			return;
 		} else {
-			const newStep = {
+			const newStep: NewStep = {
 				stepId: (Number(steps[steps.length - 1].stepId) + 1).toString(),
 				stepType: "action",
 			};

@@ -10,14 +10,27 @@ type SidePanelProps = {
 export default function SidePanel({ stepId, stepType }: SidePanelProps) {
 	const dispatch = useDispatch();
 
-	const stagedApp = useSelector((state: any) => state.workflowApp.stagedApp);
-	const selectedStaged = stagedApp.find((app) => app.stepId === stepId);
+	interface StagedApp {
+		stepId: string;
+		appName: string;
+		// Add other properties if needed
+	}
+
+	interface App {
+		appName: string;
+		triggerScopes?: string[];
+		actionScopes?: string[];
+		// Add other properties if needed
+	}
+
+	const stagedApp: StagedApp[] = useSelector((state: any) => state.workflowApp.stagedApp);
+	const selectedStaged: StagedApp | undefined = stagedApp.find((app) => app.stepId === stepId);
 	const cardStatus = useSelector((state: any) => state.workflowApp.cardStatus);
 	const app = useSelector((state: any) => state.workflowApp.apps);
-	const appScopes =
+	const appScopes: string[] | undefined =
 		stepType === "trigger"
-			? app.find((a) => a.appName == selectedStaged?.appName)?.triggerScopes
-			: app.find((a) => a.appName == selectedStaged?.appName)?.actionScopes;
+			? app.find((a: App) => a.appName == selectedStaged?.appName)?.triggerScopes
+			: app.find((a: App) => a.appName == selectedStaged?.appName)?.actionScopes;
 
 	console.log("Selected scopes app:", appScopes);
 	if (!stepId || !stepType || !selectedStaged) {
