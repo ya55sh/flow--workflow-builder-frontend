@@ -6,14 +6,27 @@ export type StagedApp = {
 	stepId: string;
 	appName: string;
 	connected?: boolean;
-	accessToken?: string;
-	refreshToken?: string;
-	expiresAt?: number;
+	expired?: boolean; // for reauth app in case of expiry
+	hasUser?: boolean; //has user is for initial render that tells where to show signin or connected/reauth
 };
 
 export type CardState = {
 	stepId: string;
 	stepType: string;
+};
+
+export type userApps = {
+	appName: string;
+	connected?: boolean;
+	accessToken?: string;
+	refreshToken?: string;
+	expiresAt?: number;
+};
+
+export type User = {
+	id: string;
+	email: string;
+	userApp?: userApps[];
 };
 
 type AppState = {
@@ -64,20 +77,14 @@ export const appSlice = createSlice({
 		},
 
 		setStagedApp: (state, action: PayloadAction<StagedApp>) => {
-			const { stepId, appName } = action.payload;
+			const { stepId, appName, connected, expired, hasUser } = action.payload;
 			const app = state.stagedApp.find((a) => a.stepId === stepId);
 
 			if (app) {
 				app.appName = appName;
-			} else {
-				state.stagedApp.push(action.payload);
-			}
-		},
-
-		addOrUpdateStagedApp: (state, action: PayloadAction<StagedApp>) => {
-			const index = state.stagedApp.findIndex((a) => a.appName === action.payload.appName);
-			if (index > -1) {
-				state.stagedApp[index] = { ...state.stagedApp[index], ...action.payload };
+				app.connected = connected;
+				app.expired = expired;
+				app.hasUser = hasUser;
 			} else {
 				state.stagedApp.push(action.payload);
 			}
@@ -86,24 +93,6 @@ export const appSlice = createSlice({
 		removeStagedApp: (state, action: PayloadAction<StagedApp>) => {
 			const { stepId, appName } = action.payload;
 			state.stagedApp = state.stagedApp.filter((a) => a.stepId !== stepId);
-		},
-
-		updateAppTokens: (
-			state,
-			action: PayloadAction<{
-				name: string;
-				accessToken?: string;
-				refreshToken?: string;
-				expiresAt?: number;
-			}>
-		) => {
-			const app = state.stagedApp.find((a) => a.appName === action.payload.name);
-			if (app) {
-				if (action.payload.accessToken) app.accessToken = action.payload.accessToken;
-				if (action.payload.refreshToken) app.refreshToken = action.payload.refreshToken;
-				if (action.payload.expiresAt) app.expiresAt = action.payload.expiresAt;
-				app.connected = true;
-			}
 		},
 
 		setCardEnabled: (state, action: PayloadAction<boolean>) => {
@@ -124,9 +113,7 @@ export const {
 	updateStep,
 	removeStep,
 	setStagedApp,
-	addOrUpdateStagedApp,
 	removeStagedApp,
-	updateAppTokens,
 	setCardEnabled,
 	setCardState,
 } = appSlice.actions;

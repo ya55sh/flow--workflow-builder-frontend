@@ -3,6 +3,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import WorkflowCard from "./components/WorkflowCard";
 import { hasToken, isTokenExpired, removeToken } from "./utils/tokenUtils";
+import { useSelector, useDispatch } from "react-redux";
+import { setUser } from "./features/workflowSlice";
+import axios from "axios";
 
 interface Workflow {
 	id: string;
@@ -16,8 +19,11 @@ interface Workflow {
 
 export default function Home() {
 	const router = useRouter();
+	const dispatch = useDispatch();
 	const [workflows, setWorkflows] = useState<Workflow[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
+
+	const user = useSelector((state: any) => state.workflowApp.user);
 
 	// Check authentication on component mount
 	useEffect(() => {
@@ -27,7 +33,22 @@ export default function Home() {
 			return;
 		}
 		loadWorkflows();
+		getUserDetails();
 	}, [router]);
+
+	const getUserDetails = async () => {
+		if (user === null || user.apps.length === 0) {
+			const data = await axios.post(
+				`${process.env.NEXT_PUBLIC_URI}${process.env.NEXT_PUBLIC_GET_USER_URI}`,
+				{},
+				{
+					headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
+				}
+			);
+			console.log("User details fetched:", data.data);
+			dispatch(setUser(data.data));
+		}
+	};
 
 	const loadWorkflows = async () => {
 		setIsLoading(true);
@@ -148,7 +169,7 @@ export default function Home() {
 					</div>
 					<button
 						onClick={handleCreateWorkflow}
-						className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2"
+						className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2 hover:cursor-pointer"
 					>
 						<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path

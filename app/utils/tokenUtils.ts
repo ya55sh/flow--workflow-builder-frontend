@@ -1,7 +1,7 @@
 /**
  * Utility functions for managing access tokens in localStorage
  */
-
+import axios from "axios";
 const TOKEN_KEY = "accessToken";
 
 /**
@@ -70,4 +70,36 @@ export const isTokenExpired = (): boolean => {
 		// If token is malformed, consider it expired
 		return true;
 	}
+};
+
+export const getTokenExpiry = (timer: number): string | null => {
+	const now = Date.now(); // current time in ms
+	const expiry = new Date(timer).getTime(); // convert expiry to ms
+
+	console.log("Current time (ms):", now);
+	console.log("Token expiry time (ms):", expiry);
+
+	if (expiry <= now) {
+		console.log("Token expired — reauthenticate needed");
+		return "expired"; // token has expired
+	} else {
+		console.log("Token still valid — proceed normally");
+		return "valid"; // token is still valid
+	}
+};
+
+export const getAccessToken = async (appName: string) => {
+	console.log(`hello ${process.env.NEXT_PUBLIC_ACCESS_URI}`);
+	let resp = await axios.post(
+		`${process.env.NEXT_PUBLIC_URI}${process.env.NEXT_PUBLIC_ACCESS_URI}${appName}`,
+		{},
+		{
+			headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
+		}
+	);
+	console.log("token Req ", resp);
+	if (resp) {
+		return "success";
+	}
+	return "failure";
 };

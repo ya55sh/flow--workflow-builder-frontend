@@ -11,7 +11,7 @@ interface AppCardProps {
 
 export default function AppCard({ stepId, stepType }: AppCardProps) {
 	const dispatch = useDispatch();
-	const cardStatus = useSelector((state: any) => state.workflowApp.cardState);
+
 	const steps = useSelector((state: any) => state.workflowApp.steps);
 	const stagedApp = useSelector((state: any) => state.workflowApp.stagedApp);
 	interface StagedApp {
