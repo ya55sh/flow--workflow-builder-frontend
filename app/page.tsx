@@ -5,149 +5,216 @@ import WorkflowCard from "./components/WorkflowCard";
 import { hasToken, isTokenExpired, removeToken } from "./utils/tokenUtils";
 import { useSelector, useDispatch } from "react-redux";
 import { setUser } from "./features/workflowSlice";
-import axios from "axios";
+import { apiClient } from "./lib/api-client";
+import { API_ENDPOINTS } from "./lib/config";
 
+/**
+ * Interface representing a workflow's frontend structure
+ * Maps the backend workflow data to the UI representation
+ */
 interface Workflow {
-	id: string;
-	name: string;
-	description: string;
-	status: "active" | "inactive" | "draft";
-	createdAt: string;
-	lastModified: string;
-	nodeCount: number;
+	id: string; // Unique identifier from database
+	name: string; // User-defined workflow name
+	description: string; // Brief description of workflow purpose
+	status: "active" | "inactive" | "draft"; // Current workflow execution status
+	createdAt: string; // ISO date string of creation
+	lastModified: string; // ISO date string of last update
+	nodeCount: number; // Number of steps in the workflow
 }
 
+/**
+ * Home Page Component - Main Dashboard
+ * Displays all user workflows and provides workflow management capabilities
+ * Features: Create, Edit, Delete, Toggle (activate/deactivate), View Logs
+ */
 export default function Home() {
+	// Next.js router for navigation
 	const router = useRouter();
+	// Redux dispatcher for state updates
 	const dispatch = useDispatch();
-	const [workflows, setWorkflows] = useState<Workflow[]>([]);
-	const [isLoading, setIsLoading] = useState(true);
 
+	// Local state management
+	const [workflows, setWorkflows] = useState<Workflow[]>([]); // List of user's workflows
+	const [isLoading, setIsLoading] = useState(true); // Loading state for async operations
+	const [isMounted, setIsMounted] = useState(false); // Client-side hydration tracking
+
+	// Get user data from Redux store
 	const user = useSelector((state: any) => state.workflowApp.user);
 
-	// Check authentication on component mount
+	/**
+	 * Effect: Ensure component is fully mounted on client side
+	 * Prevents hydration mismatch between server and client rendering
+	 */
 	useEffect(() => {
+		setIsMounted(true);
+	}, []);
+
+	/**
+	 * Effect: Authentication check and data loading
+	 * Runs after component mounts on client side
+	 * - Verifies user authentication
+	 * - Redirects to login if token is missing or expired
+	 * - Loads user workflows and details if authenticated
+	 */
+	useEffect(() => {
+		if (!isMounted) return;
+
+		// Check if token exists and is valid
 		if (!hasToken() || isTokenExpired()) {
 			removeToken();
 			router.push("/login");
 			return;
 		}
+		// Load data if authenticated
 		loadWorkflows();
 		getUserDetails();
-	}, [router]);
+	}, [router, isMounted]);
 
+	/**
+	 * Fetches user details from backend if not already in Redux store
+	 * Retrieves user ID, email, and connected app integrations
+	 * Updates Redux store with fetched user data
+	 */
 	const getUserDetails = async () => {
-		if (user === null || user.apps.length === 0) {
-			const data = await axios.post(
-				`${process.env.NEXT_PUBLIC_URI}${process.env.NEXT_PUBLIC_GET_USER_URI}`,
-				{},
-				{
-					headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-				}
-			);
-			console.log("User details fetched:", data.data);
-			dispatch(setUser(data.data));
+		// Only fetch if user data is incomplete or missing
+		if (!user || !user.email || !user.userApp || user.userApp.length === 0) {
+			try {
+				const data = await apiClient.get(API_ENDPOINTS.getUser);
+				console.log("User details fetched:", data);
+
+				// Combine user data from API response into unified structure
+				const userData = {
+					id: data?.user?.id?.toString() || "",
+					email: data?.user?.email || "",
+					userApp: data?.userApp || [], // Array of connected integrations
+				};
+
+				// Store user data in Redux for global access
+				dispatch(setUser(userData));
+			} catch (error) {
+				console.error("Error fetching user details:", error);
+			}
 		}
 	};
 
+	/**
+	 * Fetches all workflows belonging to the authenticated user
+	 * Maps backend workflow structure to frontend-friendly format
+	 * Handles errors gracefully by showing empty state
+	 */
 	const loadWorkflows = async () => {
 		setIsLoading(true);
 		try {
-			// TODO: Replace with actual API call
-			// const response = await fetch('/api/workflows', {
-			//   headers: {
-			//     'Authorization': getBearerToken()
-			//   }
-			// });
-			// const data = await response.json();
+			const data = await apiClient.get(API_ENDPOINTS.getWorkflows);
+			console.log("Workflows fetched:", data);
 
-			// Mock data for now
-			const mockWorkflows: Workflow[] = [
-				{
-					id: "1",
-					name: "Email Marketing Campaign",
-					description: "Automated email sequence for new subscribers",
-					status: "active",
-					createdAt: "2024-01-15",
-					lastModified: "2024-01-20",
-					nodeCount: 8,
-				},
-				{
-					id: "2",
-					name: "User Onboarding",
-					description: "Welcome new users with guided setup process",
-					status: "draft",
-					createdAt: "2024-01-18",
-					lastModified: "2024-01-19",
-					nodeCount: 5,
-				},
-				{
-					id: "3",
-					name: "Order Processing",
-					description: "Handle order fulfillment and notifications",
-					status: "inactive",
-					createdAt: "2024-01-10",
-					lastModified: "2024-01-15",
-					nodeCount: 12,
-				},
-			];
+			// Map backend response to frontend format
+			// Handles different field names from backend (_id vs id, workflowName vs name)
+			const mappedWorkflows: Workflow[] = data.map((wf: any) => ({
+				id: wf._id || wf.id, // MongoDB uses _id
+				name: wf.workflowName || wf.name, // Support both field names
+				description: wf.description || "No description",
+				status: wf.isActive ? "active" : "inactive", // Convert boolean to status string
+				createdAt: wf.createdAt ? new Date(wf.createdAt).toISOString().split("T")[0] : "",
+				lastModified: wf.updatedAt ? new Date(wf.updatedAt).toISOString().split("T")[0] : "",
+				nodeCount: wf.steps?.length || 0, // Count workflow steps/nodes
+			}));
 
-			setWorkflows(mockWorkflows);
+			setWorkflows(mappedWorkflows);
 		} catch (error) {
 			console.error("Error loading workflows:", error);
+			// Show empty state on error instead of crashing
+			setWorkflows([]);
 		} finally {
 			setIsLoading(false);
 		}
 	};
 
+	/**
+	 * Handler: Navigate to workflow creation page
+	 * Opens the workflow builder for creating a new workflow from scratch
+	 */
 	const handleCreateWorkflow = () => {
-		// Redirect to workflow builder instead of creating via modal
 		router.push("/create-workflow");
 	};
 
+	/**
+	 * Handler: Navigate to workflow edit page
+	 * Opens the workflow builder in edit mode with pre-filled data
+	 * @param workflow - The workflow object to edit
+	 */
 	const handleEditWorkflow = (workflow: Workflow) => {
-		// TODO: Navigate to workflow editor
 		console.log("Edit workflow:", workflow);
-		router.push(`/workflow/${workflow.id}/edit`);
+		// Pass workflow ID as query parameter for loading existing data
+		router.push(`/create-workflow?id=${workflow.id}`);
 	};
 
+	/**
+	 * Handler: Delete a workflow
+	 * Prompts user for confirmation before permanent deletion
+	 * Updates UI optimistically after successful deletion
+	 * @param workflowId - ID of the workflow to delete
+	 */
 	const handleDeleteWorkflow = async (workflowId: string) => {
+		// Confirm before permanent deletion
 		if (!confirm("Are you sure you want to delete this workflow?")) return;
 
 		try {
-			// TODO: Replace with actual API call
-			// await fetch(`/api/workflows/${workflowId}`, {
-			//   method: 'DELETE',
-			//   headers: {
-			//     'Authorization': getBearerToken()
-			//   }
-			// });
+			// Call backend API to delete workflow
+			await apiClient.delete(API_ENDPOINTS.deleteWorkflow(workflowId));
+			console.log("Workflow deleted successfully");
 
+			// Remove from UI immediately (optimistic update)
 			setWorkflows(workflows.filter((w) => w.id !== workflowId));
+			alert("Workflow deleted successfully!");
 		} catch (error) {
 			console.error("Error deleting workflow:", error);
+			alert("Failed to delete workflow. Please try again.");
 		}
 	};
 
-	const handleDuplicateWorkflow = async (workflow: Workflow) => {
+	/**
+	 * Handler: Navigate to workflow execution logs page
+	 * Shows detailed execution history and logs for a specific workflow
+	 * @param workflowId - ID of the workflow to view logs for
+	 */
+	const handleViewLogs = (workflowId: string) => {
+		router.push(`/workflow-logs/${workflowId}`);
+	};
+
+	/**
+	 * Handler: Toggle workflow active/inactive status
+	 * Active workflows run automatically when triggered
+	 * Inactive workflows are paused and won't execute
+	 * @param workflowId - ID of the workflow to toggle
+	 * @param currentStatus - Current status of the workflow
+	 */
+	const handleToggleWorkflow = async (workflowId: string, currentStatus: "active" | "inactive" | "draft") => {
 		try {
-			// TODO: Replace with actual API call
-			const duplicatedWorkflow: Workflow = {
-				...workflow,
-				id: Date.now().toString(),
-				name: `${workflow.name} (Copy)`,
-				status: "draft",
-				createdAt: new Date().toISOString().split("T")[0],
-				lastModified: new Date().toISOString().split("T")[0],
-			};
+			const isActive = currentStatus === "active";
+			const newStatus = !isActive; // Toggle the status
 
-			setWorkflows([duplicatedWorkflow, ...workflows]);
+			// Update status on backend
+			await apiClient.patch(API_ENDPOINTS.toggleWorkflow(workflowId), {
+				isActive: newStatus,
+			});
+
+			console.log(`Workflow ${workflowId} toggled to ${newStatus ? "active" : "inactive"}`);
+
+			// Update UI optimistically
+			setWorkflows(
+				workflows.map((w) => (w.id === workflowId ? { ...w, status: newStatus ? "active" : "inactive" } : w))
+			);
+
+			alert(`Workflow ${newStatus ? "activated" : "deactivated"} successfully!`);
 		} catch (error) {
-			console.error("Error duplicating workflow:", error);
+			console.error("Error toggling workflow:", error);
+			alert("Failed to toggle workflow status. Please try again.");
 		}
 	};
 
-	if (isLoading) {
+	// Show loading state while checking auth or fetching data
+	if (!isMounted || isLoading) {
 		return (
 			<div className="min-h-screen bg-gray-50 flex items-center justify-center">
 				<div className="text-center">
@@ -226,7 +293,8 @@ export default function Home() {
 								workflow={workflow}
 								onEdit={handleEditWorkflow}
 								onDelete={handleDeleteWorkflow}
-								onDuplicate={handleDuplicateWorkflow}
+								onToggle={handleToggleWorkflow}
+								onViewLogs={handleViewLogs}
 							/>
 						))}
 					</div>

@@ -1,36 +1,129 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Flow - Workflow Automation Builder
 
-## Getting Started
+A visual workflow builder for automating tasks across multiple platforms. Create powerful automation workflows without writing code.
 
-First, run the development server:
+## Features
+
+-  **Visual Workflow Builder**: Intuitive drag-and-drop interface for building automation workflows
+-  **Multiple Integrations**: Connect Gmail, Slack, GitHub, and custom Webhooks
+-  **Conditional Logic**: Add branching conditions to create intelligent workflows
+-  **Dynamic Variables**: Reference trigger data using `{{trigger.variable}}` syntax
+-  **Workflow Testing**: Test workflows before publishing to ensure they work correctly
+-  **Execution Logs**: Monitor workflow runs with detailed execution logs and debugging information
+-  **OAuth Authentication**: Secure app connections with OAuth 2.0
+
+## Tech Stack
+
+-  **Next.js 15.5.3** with React 19 - Modern React framework with App Router
+-  **TypeScript** - Type-safe development
+-  **Redux Toolkit** - State management for workflow builder
+-  **Tailwind CSS** - Utility-first styling
+-  **Axios** - HTTP client for API communication
+-  **Google OAuth** - Authentication integration
+
+## Prerequisites
+
+-  Node.js 18+ installed
+-  pnpm package manager
+-  Backend API server running (required for full functionality)
+
+## Installation
+
+1. Clone the repository:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd flow--workflow-builder-frontend
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Create environment configuration:
 
-## Learn More
+```bash
+cp .env.example .env.local
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Environment Variables
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Create a `.env.local` file in the project root with the following variables:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```env
+# Google OAuth Client ID (required for authentication)
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
 
-## Deploy on Vercel
+# Backend API URL (default: http://localhost:2000)
+NEXT_PUBLIC_URI=http://localhost:2000
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Running the Application
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Development mode:**
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+**Production build:**
+
+```bash
+pnpm build
+pnpm start
+```
+
+## Project Structure
+
+```
+app/
+├── components/       # Reusable UI components
+├── features/         # Redux slices and state management
+├── config/           # Action and trigger configurations
+├── lib/              # API client and shared utilities
+├── utils/            # Helper functions
+├── create-workflow/  # Workflow builder page
+├── workflow-logs/    # Execution logs pages
+└── profile/          # User profile and settings
+```
+
+## Supported Integrations
+
+### Gmail
+
+-  **Triggers**: New Email, Email Labeled, Email Starred
+-  **Actions**: Send Email, Reply to Email, Add Label, Star Email
+
+### Slack
+
+-  **Triggers**: New Channel Message, New Reaction, User Joined Channel
+-  **Actions**: Send DM, Send Channel Message, Add Reaction, Update Message
+
+### GitHub
+
+-  **Triggers**: New Issue, PR Opened, Commit Pushed, Issue Commented
+-  **Actions**: Create Issue, Add Comment, Close Issue, Assign Issue
+
+### Webhooks
+
+-  **Actions**: Send HTTP POST request to any URL
+
+## How It Works
+
+1. **Create a Workflow**: Start by selecting a trigger (e.g., "New Gmail Email")
+2. **Add Actions**: Chain multiple actions (e.g., "Send Slack Message")
+3. **Use Variables**: Reference trigger data like `{{trigger.from}}` or `{{trigger.subject}}`
+4. **Add Conditions**: Create branching logic based on trigger data
+5. **Test & Publish**: Test your workflow, then publish to activate it
+
+## Development
+
+The application uses Redux for state management. Key state is stored in:
+
+-  `workflowSlice.tsx` - Workflow builder state, steps, and configurations
+
+API calls are centralized in `app/lib/api-client.ts` with automatic authentication token handling.

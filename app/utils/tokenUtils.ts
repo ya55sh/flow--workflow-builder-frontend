@@ -1,8 +1,19 @@
 /**
  * Utility functions for managing access tokens in localStorage
  */
-import axios from "axios";
+import { apiClient } from "../lib/api-client";
 const TOKEN_KEY = "accessToken";
+
+type AccessTokenSuccess = {
+	message: "success";
+	expiresAt: string; // or Date if server sends it in Date format
+};
+
+type AccessTokenFailure = {
+	message: "failure";
+};
+
+export type AccessTokenResponse = AccessTokenSuccess | AccessTokenFailure;
 
 /**
  * Save access token to localStorage
@@ -72,13 +83,11 @@ export const isTokenExpired = (): boolean => {
 	}
 };
 
-export const getTokenExpiry = (timer: number): string | null => {
-	const now = Date.now(); // current time in ms
-	const expiry = new Date(timer).getTime(); // convert expiry to ms
+export const getTokenExpiry = (timer: string): string | null => {
+	const now = Date.now();
+	const expiry = new Date(timer).getTime();
 
-	console.log("Current time (ms):", now);
-	console.log("Token expiry time (ms):", expiry);
-
+	console.log("now, expiry ", now, expiry);
 	if (expiry <= now) {
 		console.log("Token expired — reauthenticate needed");
 		return "expired"; // token has expired
@@ -88,18 +97,16 @@ export const getTokenExpiry = (timer: number): string | null => {
 	}
 };
 
-export const getAccessToken = async (appName: string) => {
-	console.log(`hello ${process.env.NEXT_PUBLIC_ACCESS_URI}`);
-	let resp = await axios.post(
-		`${process.env.NEXT_PUBLIC_URI}${process.env.NEXT_PUBLIC_ACCESS_URI}${appName}`,
-		{},
-		{
-			headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-		}
-	);
-	console.log("token Req ", resp);
-	if (resp) {
-		return "success";
+export const getAccessToken = async (appName: string): Promise<AccessTokenResponse> => {
+	try {
+		const resp = await apiClient.post(`/oauth/app/access/${appName}`, {});
+		console.log("token Req ", resp);
+
+		return resp as AccessTokenResponse;
+	} catch (err) {
+		console.error("Error refreshing token", err);
+		return {
+			message: "failure",
+		};
 	}
-	return "failure";
 };

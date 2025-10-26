@@ -1,8 +1,19 @@
 import Link from "next/link";
 
+/**
+ * Header Component
+ * Main navigation header displayed at the top of all pages
+ *
+ * Features:
+ * - Home logo/icon (left side)
+ * - Application title/branding (center)
+ * - Profile icon and Login link (right side)
+ * - Links to main pages
+ */
 export default function Header() {
 	return (
 		<header className="grid grid-cols-3 items-center w-full p-2">
+			{/* Left: Home logo */}
 			<div className="p-2 m-2">
 				<Link href="/">
 					<img
@@ -12,10 +23,15 @@ export default function Header() {
 					/>
 				</Link>
 			</div>
+
+			{/* Center: Application title */}
 			<Link href="/">
 				<h1 className="text-stone-900 font-bold text-center text-4xl whitespace-nowrap">Welcome to Flow</h1>
 			</Link>
+
+			{/* Right: User navigation */}
 			<div className="flex justify-end items-center p-2 row-gap-4">
+				{/* Profile link */}
 				<Link href="/profile" className="p-2 mr-4">
 					<img
 						src="/user-profile.svg"
@@ -23,6 +39,7 @@ export default function Header() {
 						className="h-12 w-12 rounded-full border-2 border-indigo-500/50 cursor-pointer hover:opacity-100 hover:border-indigo-500/90 transition"
 					/>
 				</Link>
+				{/* Login link */}
 				<Link
 					href="/login"
 					className="p-2 mr-4 text-indigo-600 font-semibold border-2 border-transparent rounded-lg hover:no-underline hover:border-2 hover:border-indigo-500/90 hover:rounded-lg transition delay-75 "

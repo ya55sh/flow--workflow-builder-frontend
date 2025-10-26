@@ -4,13 +4,29 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import Auth from "../components/GoogleOauth";
 
+/**
+ * Login Page Component
+ * Provides authentication interface for users to log into the application
+ *
+ * Features:
+ * - Email/password login (currently placeholder)
+ * - Google OAuth integration
+ * - Link to password reset page
+ * - Link to signup for new users
+ */
 export default function Login() {
+	// Local state for email/password form (not yet implemented)
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 
+	/**
+	 * Handler: Submit login form
+	 * Currently a placeholder - full implementation pending
+	 * @param e - Form submission event
+	 */
 	const handleSubmit = (e: React.FormEvent) => {
 		console.log("FORM CLICKED", email, password);
-		e.preventDefault();
+		e.preventDefault(); // Prevent default form submission
 	};
 
 	return (
