@@ -931,7 +931,8 @@ export default function SidePanel({ stepId, stepType }: SidePanelProps) {
 				)}
 
 				{/* Account section - only for trigger/action steps - placed at bottom */}
-				{stepType !== "condition" && selectedStaged && (
+				{/* Hide for webhook since it doesn't require OAuth */}
+				{stepType !== "condition" && selectedStaged && selectedStaged.appName !== "webhook" && (
 					<div>
 						<h1 className="m-1">Account</h1>
 						<div className="p-2 border-1 border-gray-500/50 rounded-lg">
