@@ -338,15 +338,7 @@ export const ActionConfigs: Record<string, Record<string, ActionConfig>> = {
 export const TriggerConfigs: Record<string, Record<string, TriggerConfig>> = {
 	gmail: {
 		new_email: {
-			fields: [
-				{
-					name: "query",
-					label: "Query",
-					type: "text",
-					required: false,
-					placeholder: "is:unread",
-				},
-			],
+			fields: [],
 		},
 		email_labeled: {
 			fields: [
@@ -365,15 +357,7 @@ export const TriggerConfigs: Record<string, Record<string, TriggerConfig>> = {
 			fields: [],
 		},
 		email_replied: {
-			fields: [
-				{
-					name: "threadId",
-					label: "Thread ID",
-					type: "text",
-					required: false,
-					placeholder: "Optional: specific thread ID",
-				},
-			],
+			fields: [],
 		},
 	},
 	slack: {

@@ -302,6 +302,33 @@ export default function SidePanel({ stepId, stepType }: SidePanelProps) {
 		dispatch(setCardEnabled(false));
 	}
 
+	function handleAppSignin() {
+		// Implement app sign-in functionality
+		console.log("Clicking app signin");
+
+		const userApps = userDetails?.userApp || [];
+		const appToConnect = userApps.find((a: App) => a.appName === selectedStaged?.appName);
+		console.log("App to connect:", appToConnect);
+
+		if (appToConnect) {
+			// App found in user apps - check if token is expired
+			if (appToConnect.expiresAt !== null) {
+				const getExpiry = getTokenExpiry(appToConnect.expiresAt || 0);
+
+				if (getExpiry === "expired") {
+					console.log("Token expired — reauthenticate needed");
+					// Redirect to OAuth for re-authentication
+					window.location.href = `${process.env.NEXT_PUBLIC_URI}/api/oauth/app/${selectedStaged?.appName}?state=${userDetails.user.id}`;
+				} else {
+					console.log("Token valid — proceed as normal");
+				}
+			}
+		} else {
+			// App not found - send an auth request
+			window.location.href = `${process.env.NEXT_PUBLIC_URI}/api/oauth/app/${selectedStaged?.appName}?state=${userDetails.user.id}`;
+		}
+	}
+
 	function handleSelect(event: React.ChangeEvent<HTMLSelectElement>) {
 		const newTitle = event.target.value;
 
@@ -481,9 +508,9 @@ export default function SidePanel({ stepId, stepType }: SidePanelProps) {
 
 		if (availableSteps.length === 0) {
 			return stepType === "condition" ? (
-				<div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
-					<p className="text-xs font-semibold text-amber-800 mb-1">No Forward Steps Available</p>
-					<p className="text-xs text-amber-700">Add more steps after this condition using the ➕ button below.</p>
+				<div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+					<p className="text-xs font-semibold text-gray-800 mb-1">No Forward Steps Available</p>
+					<p className="text-xs text-gray-700">Add more steps after this condition using the ➕ button below.</p>
 				</div>
 			) : null;
 		}
@@ -806,7 +833,7 @@ export default function SidePanel({ stepId, stepType }: SidePanelProps) {
 													</select>
 													{workflow.steps.filter((s: WorkflowStep) => Number(s.id) > Number(stepId))
 														.length === 0 && (
-														<p className="text-xs text-amber-600 mt-1">
+														<p className="text-xs text-gray-600 mt-1">
 															⚠️ No steps after this condition. Add more steps below.
 														</p>
 													)}
@@ -828,7 +855,7 @@ export default function SidePanel({ stepId, stepType }: SidePanelProps) {
 								{/* Else clause */}
 								<div className="bg-white p-4 rounded-lg border-2 border-gray-200 shadow-sm">
 									<div className="flex items-center gap-2 mb-3">
-										<span className="text-sm font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded">
+										<span className="text-sm font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded">
 											ELSE (Fallback)
 										</span>
 									</div>
@@ -852,7 +879,7 @@ export default function SidePanel({ stepId, stepType }: SidePanelProps) {
 										</select>
 										{workflow.steps.filter((s: WorkflowStep) => Number(s.id) > Number(stepId)).length ===
 											0 && (
-											<p className="text-xs text-amber-600 mt-1">
+											<p className="text-xs text-gray-600 mt-1">
 												⚠️ No steps after this condition. Add more steps below.
 											</p>
 										)}
@@ -899,6 +926,31 @@ export default function SidePanel({ stepId, stepType }: SidePanelProps) {
 						<h1 className="m-1">Configuration</h1>
 						<div className="p-2 border-1 border-gray-500/50 rounded-lg space-y-3">
 							{triggerConfig.fields.map((field) => renderConfigField(field))}
+						</div>
+					</div>
+				)}
+
+				{/* Account section - only for trigger/action steps - placed at bottom */}
+				{stepType !== "condition" && selectedStaged && (
+					<div>
+						<h1 className="m-1">Account</h1>
+						<div className="p-2 border-1 border-gray-500/50 rounded-lg">
+							{selectedStaged.connected ? (
+								<button
+									disabled
+									onClick={handleAppSignin}
+									className="p-1 pr-2 pl-2 rounded-lg bg-indigo-400 hover:cursor-pointer text-white"
+								>
+									<p>Connected</p>
+								</button>
+							) : (
+								<button
+									onClick={handleAppSignin}
+									className="p-1 pr-2 pl-2 rounded-lg bg-indigo-400 hover:cursor-pointer hover:bg-indigo-700 transition duration-200 text-white"
+								>
+									<p>Sign in</p>
+								</button>
+							)}
 						</div>
 					</div>
 				)}
