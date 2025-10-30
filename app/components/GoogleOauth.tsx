@@ -2,66 +2,100 @@
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
-import axios from "axios";
 import { saveToken } from "../utils/tokenUtils";
+import { apiClient } from "../lib/api-client";
+import { API_ENDPOINTS } from "../lib/config";
 
+/**
+ * Interface: Google OAuth JWT payload
+ * Contains user data returned from Google after authentication
+ */
 interface GooglePayload {
-	email: string;
-	name: string;
-	sub: string;
+	email: string; // User's email from Google account
+	name: string; // User's display name
+	sub: string; // Google's unique user identifier (subject)
 }
 
+/**
+ * Type: Component props for GoogleAuth button
+ * Determines whether to use login or signup flow
+ */
 type GoogleAuthButtonProps = {
-	mode: "login" | "signup"; // restricts allowed values
+	mode: "login" | "signup"; // Restricts to only valid authentication modes
 };
 
+/**
+ * Google OAuth Component
+ * Provides "Sign in with Google" functionality
+ *
+ * Features:
+ * - Integrates Google OAuth 2.0 authentication
+ * - Supports both login and signup modes
+ * - Decodes JWT tokens from Google
+ * - Saves access tokens to localStorage
+ * - Redirects after successful authentication
+ * - Handles authentication errors
+ */
 export default function Auth({ mode }: GoogleAuthButtonProps) {
 	const router = useRouter();
 
+	/**
+	 * Handler: Process Google OAuth response
+	 * Decodes JWT token, sends to backend, saves access token, and redirects
+	 *
+	 * Flow:
+	 * 1. Decode Google JWT to extract user info
+	 * 2. Send user data to backend (login or signup endpoint)
+	 * 3. Save returned access token to localStorage
+	 * 4. Redirect to appropriate page based on mode
+	 *
+	 * @param credentialResponse - Response from Google OAuth containing JWT
+	 */
 	const handleGoogleResponse = async (credentialResponse: any) => {
 		let data;
+		// Decode JWT token to extract user information
 		const decoded: GooglePayload = jwtDecode(credentialResponse.credential);
 		console.log("User info:", decoded);
 
-		// Send credentialResponse.credential to your backend
-		// Backend decides: login existing user OR signup new user
-		if (mode === "signup") {
-			console.log("SIGNUP FLOW");
-			data = await axios.post(
-				`${process.env.NEXT_PUBLIC_URI}${process.env.NEXT_PUBLIC_SIGNUP_URI}`,
-				{ type: `google`, email: `${decoded.email}`, sub: `${decoded.sub}` },
-				{
-					headers: {
-						"Content-Type": "application/json",
-					},
-				}
-			);
-		} else {
-			console.log("LOGIN FLOW");
-			data = await axios.post(
-				`${process.env.NEXT_PUBLIC_URI}${process.env.NEXT_PUBLIC_LOGIN_URI}`,
-				{ type: `google`, email: `${decoded.email}`, sub: `${decoded.sub}` },
-				{
-					headers: {
-						"Content-Type": "application/json",
-					},
-				}
-			);
-		}
+		// Send user data to backend for authentication
+		// Backend handles: user creation (signup) or validation (login)
+		try {
+			if (mode === "signup") {
+				// Signup flow: Create new user account
+				console.log("SIGNUP FLOW");
+				data = await apiClient.post(API_ENDPOINTS.signup, {
+					type: `google`,
+					email: `${decoded.email}`,
+					sub: `${decoded.sub}`, // Google's unique user ID
+				});
+			} else {
+				// Login flow: Authenticate existing user
+				console.log("LOGIN FLOW");
+				data = await apiClient.post(API_ENDPOINTS.login, {
+					type: `google`,
+					email: `${decoded.email}`,
+					sub: `${decoded.sub}`,
+				});
+			}
 
-		console.log("Backend response:", data);
+			console.log("Backend response:", data);
 
-		// Save access token to localStorage if present in response
-		if (data?.data?.access_token) {
-			saveToken(data.data.access_token);
-			console.log("Access token saved to localStorage");
-		}
+			// Save access token to localStorage for subsequent API requests
+			if (data?.access_token) {
+				saveToken(data.access_token);
+				console.log("Access token saved to localStorage");
+			}
 
-		// Example: Redirect to dashboard after successful login
-		if (mode === "signup" && data?.data?.type === "normal") {
-			router.push("/login");
-		} else {
-			router.push("/");
+			// Redirect based on authentication mode and result
+			if (mode === "signup" && data?.type === "normal") {
+				// After signup, redirect to login page
+				router.push("/login");
+			} else {
+				// After successful login, redirect to dashboard
+				router.push("/");
+			}
+		} catch (error) {
+			console.error("Error during authentication:", error);
 		}
 	};
 

@@ -1,24 +1,45 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 
+/**
+ * Interface: Workflow data structure
+ * Represents a workflow in the dashboard grid
+ */
 interface Workflow {
-	id: string;
-	name: string;
-	description: string;
-	status: "active" | "inactive" | "draft";
-	createdAt: string;
-	lastModified: string;
-	nodeCount: number;
+	id: string; // Unique workflow identifier
+	name: string; // User-defined workflow name
+	description: string; // Brief description of workflow purpose
+	status: "active" | "inactive" | "draft"; // Current execution status
+	createdAt: string; // Creation date
+	lastModified: string; // Last modification date
+	nodeCount: number; // Number of steps in workflow
 }
 
+/**
+ * Props interface for WorkflowCard component
+ * Defines callback handlers for workflow actions
+ */
 interface WorkflowCardProps {
-	workflow: Workflow;
-	onEdit: (workflow: Workflow) => void;
-	onDelete: (workflowId: string) => void;
-	onDuplicate: (workflow: Workflow) => void;
+	workflow: Workflow; // The workflow data to display
+	onEdit: (workflow: Workflow) => void; // Handler for edit action
+	onDelete: (workflowId: string) => void; // Handler for delete action
+	onToggle: (workflowId: string, currentStatus: "active" | "inactive" | "draft") => void; // Handler for activate/deactivate
+	onViewLogs: (workflowId: string) => void; // Handler for viewing execution logs
 }
 
-export default function WorkflowCard({ workflow, onEdit, onDelete, onDuplicate }: WorkflowCardProps) {
+/**
+ * Workflow Card Component
+ * Displays a single workflow with its details and action menu
+ *
+ * Features:
+ * - Shows workflow name, description, and status
+ * - Displays creation/modification dates
+ * - Shows number of workflow steps
+ * - Action menu with Edit, Toggle, View Logs, and Delete options
+ * - Status badge with color coding
+ * - Dropdown menu with outside-click handling
+ */
+export default function WorkflowCard({ workflow, onEdit, onDelete, onToggle, onViewLogs }: WorkflowCardProps) {
 	const [showActions, setShowActions] = useState(false);
 	const menuRef = useRef<HTMLDivElement>(null);
 
@@ -36,19 +57,29 @@ export default function WorkflowCard({ workflow, onEdit, onDelete, onDuplicate }
 		return () => document.removeEventListener("mousedown", handleClickOutside);
 	}, [showActions]);
 
+	/**
+	 * Helper: Get Tailwind CSS classes for status badge based on workflow status
+	 * @param status - The workflow status
+	 * @returns CSS class string for background and text color
+	 */
 	const getStatusColor = (status: string) => {
 		switch (status) {
 			case "active":
-				return "bg-green-100 text-green-800";
+				return "bg-green-100 text-green-800"; // Green for active workflows
 			case "inactive":
-				return "bg-gray-100 text-gray-800";
+				return "bg-gray-100 text-gray-800"; // Gray for inactive workflows
 			case "draft":
-				return "bg-yellow-100 text-yellow-800";
+				return "bg-yellow-100 text-yellow-800"; // Yellow for draft workflows
 			default:
-				return "bg-gray-100 text-gray-800";
+				return "bg-gray-100 text-gray-800"; // Default gray
 		}
 	};
 
+	/**
+	 * Helper: Format date string to user-friendly format
+	 * @param dateString - ISO date string from backend
+	 * @returns Formatted date like "Jan 15, 2025"
+	 */
 	const formatDate = (dateString: string) => {
 		return new Date(dateString).toLocaleDateString("en-US", {
 			year: "numeric",
@@ -95,7 +126,7 @@ export default function WorkflowCard({ workflow, onEdit, onDelete, onDuplicate }
 								</button>
 								<button
 									onClick={() => {
-										onDuplicate(workflow);
+										onToggle(workflow.id, workflow.status);
 										setShowActions(false);
 									}}
 									className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -105,10 +136,27 @@ export default function WorkflowCard({ workflow, onEdit, onDelete, onDuplicate }
 											strokeLinecap="round"
 											strokeLinejoin="round"
 											strokeWidth={2}
-											d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+											d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
 										/>
 									</svg>
-									Duplicate
+									{workflow.status === "active" ? "Deactivate" : "Activate"}
+								</button>
+								<button
+									onClick={() => {
+										onViewLogs(workflow.id);
+										setShowActions(false);
+									}}
+									className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+								>
+									<svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+										/>
+									</svg>
+									View Logs
 								</button>
 								<button
 									onClick={() => {
@@ -133,14 +181,14 @@ export default function WorkflowCard({ workflow, onEdit, onDelete, onDuplicate }
 				</div>
 			</div>
 
-			<div className="flex items-center justify-between">
+			<div className="flex items-center justify-between gap-4">
 				<div className="flex items-center space-x-4">
 					<span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(workflow.status)}`}>
 						{workflow.status.charAt(0).toUpperCase() + workflow.status.slice(1)}
 					</span>
 					<span className="text-sm text-gray-500">{workflow.nodeCount} nodes</span>
 				</div>
-				<div className="text-xs text-gray-400">Modified {formatDate(workflow.lastModified)}</div>
+				<div className="text-xs text-gray-400 whitespace-nowrap">Modified {formatDate(workflow.lastModified)}</div>
 			</div>
 		</div>
 	);

@@ -1,8 +1,19 @@
 /**
  * Utility functions for managing access tokens in localStorage
  */
-
+import { apiClient } from "../lib/api-client";
 const TOKEN_KEY = "accessToken";
+
+type AccessTokenSuccess = {
+	message: "success";
+	expiresAt: string; // or Date if server sends it in Date format
+};
+
+type AccessTokenFailure = {
+	message: "failure";
+};
+
+export type AccessTokenResponse = AccessTokenSuccess | AccessTokenFailure;
 
 /**
  * Save access token to localStorage
@@ -69,5 +80,33 @@ export const isTokenExpired = (): boolean => {
 	} catch (error) {
 		// If token is malformed, consider it expired
 		return true;
+	}
+};
+
+export const getTokenExpiry = (timer: string): string | null => {
+	const now = Date.now();
+	const expiry = new Date(timer).getTime();
+
+	console.log("now, expiry ", now, expiry);
+	if (expiry <= now) {
+		console.log("Token expired — reauthenticate needed");
+		return "expired"; // token has expired
+	} else {
+		console.log("Token still valid — proceed normally");
+		return "valid"; // token is still valid
+	}
+};
+
+export const getAccessToken = async (appName: string): Promise<AccessTokenResponse> => {
+	try {
+		const resp = await apiClient.post(`/oauth/app/access/${appName}`, {});
+		console.log("token Req ", resp);
+
+		return resp as AccessTokenResponse;
+	} catch (err) {
+		console.error("Error refreshing token", err);
+		return {
+			message: "failure",
+		};
 	}
 };

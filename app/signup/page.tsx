@@ -5,14 +5,31 @@ import { useEffect, useState } from "react";
 
 import Auth from "../components/GoogleOauth";
 
+/**
+ * Signup Page Component
+ * User registration interface for creating new accounts
+ *
+ * Features:
+ * - Email/password registration (currently placeholder)
+ * - Google OAuth signup integration
+ * - Password confirmation field
+ * - Link to login page for existing users
+ */
 export default function Signup() {
+	// Local state for signup form fields (not yet fully implemented)
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
 
+	/**
+	 * Handler: Submit signup form
+	 * Currently a placeholder - full implementation pending
+	 * Future: Should validate passwords match and create user account
+	 * @param e - Form submission event
+	 */
 	const handleSubmit = (e: React.FormEvent) => {
 		console.log("FORM CLICKED");
-		e.preventDefault();
+		e.preventDefault(); // Prevent default form submission
 	};
 
 	return (
