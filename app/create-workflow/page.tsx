@@ -82,7 +82,6 @@ function CreateWorkflowContent() {
 				try {
 					setIsLoadingUser(true);
 					const data = await apiClient.get(API_ENDPOINTS.getUser);
-					console.log("User details fetched:", data);
 					dispatch(setUser(data)); // Store in Redux
 				} catch (error) {
 					console.error("Error fetching user details:", error);
@@ -117,7 +116,6 @@ function CreateWorkflowContent() {
 	}, []);
 
 	useEffect(() => {
-		console.log(workflow);
 		// Reset test status when workflow changes
 		setIsWorkflowTested(false);
 	}, [workflow]);
@@ -125,7 +123,6 @@ function CreateWorkflowContent() {
 	// Sync input field with workflow name from Redux when workflow is loaded
 	useEffect(() => {
 		if (isEditMode && workflow.workflowName && workflow.workflowName !== workflowNameInput) {
-			console.log("Syncing workflow name to input:", workflow.workflowName);
 			setWorkflowNameInput(workflow.workflowName);
 		}
 	}, [workflow.workflowName, isEditMode]);
@@ -144,10 +141,6 @@ function CreateWorkflowContent() {
 		setIsLoadingWorkflow(true);
 		try {
 			const data = await apiClient.get(`/workflows/${id}`);
-			console.log("Loaded workflow for edit - FULL DATA:", JSON.stringify(data, null, 2));
-			console.log("data.workflowName:", data.workflowName);
-			console.log("data.name:", data.name);
-			console.log("All keys in data:", Object.keys(data));
 
 			// Backend might return 'name' or 'workflowName'
 			const workflowName = data.name || data.workflowName || "";
@@ -192,7 +185,6 @@ function CreateWorkflowContent() {
 			setHasLoadedWorkflow(true);
 
 			// Set the workflow name in local state
-			console.log("Setting workflow name input to:", workflowName);
 			setWorkflowNameInput(workflowName);
 		} catch (error) {
 			console.error("Error loading workflow for edit:", error);
@@ -217,7 +209,6 @@ function CreateWorkflowContent() {
 	 */
 	function handleWorkflowNameSubmit() {
 		const wfName = workflowNameInput.trim();
-		console.log("Workflow name:", wfName);
 
 		// Merge workflow name into existing workflow object
 		const workflowData = {
@@ -365,11 +356,8 @@ function CreateWorkflowContent() {
 			},
 		};
 
-		console.log("Workflow payload:", JSON.stringify(workflowPayload, null, 2));
-
 		try {
 			const result = await apiClient.post(API_ENDPOINTS.testWorkflow, workflowPayload);
-			console.log("Test workflow result:", result);
 			setIsWorkflowTested(true);
 			alert("Workflow tested successfully! You can now publish it.");
 		} catch (error) {
@@ -410,11 +398,8 @@ function CreateWorkflowContent() {
 			},
 		};
 
-		console.log("Publishing workflow:", JSON.stringify(workflowPayload, null, 2));
-
 		try {
 			const result = await apiClient.post(API_ENDPOINTS.createWorkflow, workflowPayload);
-			console.log("Workflow published successfully:", result);
 			alert("Workflow published successfully!");
 			router.push("/");
 		} catch (error) {
@@ -433,11 +418,8 @@ function CreateWorkflowContent() {
 			},
 		};
 
-		console.log("Updating workflow:", JSON.stringify(workflowPayload, null, 2));
-
 		try {
 			const result = await apiClient.patch(API_ENDPOINTS.updateWorkflow(workflowId), workflowPayload);
-			console.log("Workflow updated successfully:", result);
 			alert("Workflow updated successfully!");
 			router.push("/");
 		} catch (error) {

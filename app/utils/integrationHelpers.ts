@@ -20,9 +20,7 @@ import { API_ENDPOINTS } from "../lib/config";
  */
 export async function fetchSlackChannels() {
 	try {
-		console.log("Fetching Slack channels...");
 		const response = await apiClient.get<{ channels: any[] }>(API_ENDPOINTS.integrations.slack.channels);
-		console.log("Slack channels response:", response);
 		return response.channels || [];
 	} catch (error: any) {
 		console.error("Error fetching Slack channels:", {
@@ -36,9 +34,7 @@ export async function fetchSlackChannels() {
 
 export async function fetchSlackUsers() {
 	try {
-		console.log("Fetching Slack users...");
 		const response = await apiClient.get<{ users: any[] }>(API_ENDPOINTS.integrations.slack.users);
-		console.log("Slack users response:", response);
 		return response.users || [];
 	} catch (error: any) {
 		console.error("Error fetching Slack users:", {

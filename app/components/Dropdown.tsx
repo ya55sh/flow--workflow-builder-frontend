@@ -64,7 +64,6 @@ export default function Dropdown({ stepId }: DropdownProps) {
 	const handleChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
 		event.stopPropagation();
 		const selectedAppName: string = event.target.value;
-
 		// Determine step type based on position (first step is always trigger)
 		const stepType = steps.length === 1 ? "trigger" : "action";
 
@@ -80,12 +79,9 @@ export default function Dropdown({ stepId }: DropdownProps) {
 
 			let appInfo = userDetails?.userApp.filter((app: App) => app.appName === selectedAppName.toLowerCase())[0];
 
-			console.log("app ", appInfo);
-
 			if (appInfo.appName === "slack" && appInfo.expiresAt === null) {
 				stagedPayload.expired = false;
 			} else if (appInfo != null) {
-				console.log("app info expire ", appInfo.expiresAt);
 				let getAppExpiry = getTokenExpiry(appInfo.expiresAt);
 				if (getAppExpiry === "expired") {
 					stagedPayload.expired = true;

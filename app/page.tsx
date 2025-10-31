@@ -80,7 +80,6 @@ export default function Home() {
 		if (!user || !user.email || !user.userApp || user.userApp.length === 0) {
 			try {
 				const data = await apiClient.get(API_ENDPOINTS.getUser);
-				console.log("User details fetched:", data);
 
 				// Combine user data from API response into unified structure
 				const userData = {
@@ -106,7 +105,6 @@ export default function Home() {
 		setIsLoading(true);
 		try {
 			const data = await apiClient.get(API_ENDPOINTS.getWorkflows);
-			console.log("Workflows fetched:", data);
 
 			// Map backend response to frontend format
 			// Handles different field names from backend (_id vs id, workflowName vs name)
@@ -144,7 +142,6 @@ export default function Home() {
 	 * @param workflow - The workflow object to edit
 	 */
 	const handleEditWorkflow = (workflow: Workflow) => {
-		console.log("Edit workflow:", workflow);
 		// Pass workflow ID as query parameter for loading existing data
 		router.push(`/create-workflow?id=${workflow.id}`);
 	};
@@ -162,7 +159,6 @@ export default function Home() {
 		try {
 			// Call backend API to delete workflow
 			await apiClient.delete(API_ENDPOINTS.deleteWorkflow(workflowId));
-			console.log("Workflow deleted successfully");
 
 			// Remove from UI immediately (optimistic update)
 			setWorkflows(workflows.filter((w) => w.id !== workflowId));
@@ -198,8 +194,6 @@ export default function Home() {
 			await apiClient.patch(API_ENDPOINTS.toggleWorkflow(workflowId), {
 				isActive: newStatus,
 			});
-
-			console.log(`Workflow ${workflowId} toggled to ${newStatus ? "active" : "inactive"}`);
 
 			// Update UI optimistically
 			setWorkflows(

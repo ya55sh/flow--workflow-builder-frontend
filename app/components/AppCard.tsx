@@ -73,7 +73,6 @@ export default function AppCard({ stepId, stepType }: AppCardProps) {
 
 	function handleCardClick(event: HandleCardClickEvent): void {
 		event.stopPropagation();
-		console.log("Card clicked");
 		dispatch(setCardEnabled(true));
 		dispatch(setCardState({ stepId, stepType }));
 	}
