@@ -55,14 +55,12 @@ export default function Auth({ mode }: GoogleAuthButtonProps) {
 		let data;
 		// Decode JWT token to extract user information
 		const decoded: GooglePayload = jwtDecode(credentialResponse.credential);
-		console.log("User info:", decoded);
 
 		// Send user data to backend for authentication
 		// Backend handles: user creation (signup) or validation (login)
 		try {
 			if (mode === "signup") {
 				// Signup flow: Create new user account
-				console.log("SIGNUP FLOW");
 				data = await apiClient.post(API_ENDPOINTS.signup, {
 					type: `google`,
 					email: `${decoded.email}`,
@@ -70,7 +68,6 @@ export default function Auth({ mode }: GoogleAuthButtonProps) {
 				});
 			} else {
 				// Login flow: Authenticate existing user
-				console.log("LOGIN FLOW");
 				data = await apiClient.post(API_ENDPOINTS.login, {
 					type: `google`,
 					email: `${decoded.email}`,
@@ -78,12 +75,9 @@ export default function Auth({ mode }: GoogleAuthButtonProps) {
 				});
 			}
 
-			console.log("Backend response:", data);
-
 			// Save access token to localStorage for subsequent API requests
 			if (data?.access_token) {
 				saveToken(data.access_token);
-				console.log("Access token saved to localStorage");
 			}
 
 			// Redirect based on authentication mode and result
@@ -105,7 +99,7 @@ export default function Auth({ mode }: GoogleAuthButtonProps) {
 				<GoogleLogin
 					onSuccess={handleGoogleResponse}
 					onError={() => {
-						console.log("Google Sign-In Failed");
+						// Intentionally left blank to avoid noisy logs
 					}}
 				/>
 			</div>

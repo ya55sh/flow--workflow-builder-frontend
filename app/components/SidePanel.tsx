@@ -140,10 +140,6 @@ export default function SidePanel({ stepId, stepType }: SidePanelProps) {
 			? getTriggerConfig(selectedStaged?.appName || "", currentStep.title)
 			: null;
 
-	console.log("Selected staged app:", selectedStaged);
-	console.log("Action config schema:", actionConfig);
-	console.log("Trigger config schema:", triggerConfig);
-
 	// Fetch dropdown data when action or trigger is selected
 	useEffect(() => {
 		const fetchDropdowns = async () => {
@@ -152,24 +148,18 @@ export default function SidePanel({ stepId, stepType }: SidePanelProps) {
 
 			// Check if user is connected to the app
 			if (!selectedStaged?.connected) {
-				console.log("User not connected to app, skipping dropdown fetch");
 				setIsLoadingDropdowns(false);
 				return;
 			}
 
 			setIsLoadingDropdowns(true);
 
-			console.log(`Fetching dropdowns for ${stepType}:`, currentStep.title);
-			console.log("App connected:", selectedStaged.connected);
-
 			const newDropdownData: Record<string, any[]> = {};
 
 			for (const field of config.fields) {
 				if (field.type === "dropdown" && field.endpoint) {
-					console.log(`Fetching dropdown data for field: ${field.name} from ${field.endpoint}`);
 					const data = await fetchDropdownData(field.endpoint);
 					newDropdownData[field.name] = data;
-					console.log(`Received ${data.length} items for ${field.name}`);
 				}
 			}
 
@@ -256,7 +246,6 @@ export default function SidePanel({ stepId, stepType }: SidePanelProps) {
 	}, [currentStep?.id, stepType]);
 
 	useEffect(() => {
-		console.log("workflow ", workflow);
 		if (!selectedStaged) return;
 		if (selectedStaged.hasUser === true && selectedStaged.expired === true) {
 			const refreshUser = async () => {
@@ -304,11 +293,8 @@ export default function SidePanel({ stepId, stepType }: SidePanelProps) {
 
 	function handleAppSignin() {
 		// Implement app sign-in functionality
-		console.log("Clicking app signin");
-
 		const userApps = userDetails?.userApp || [];
 		const appToConnect = userApps.find((a: App) => a.appName === selectedStaged?.appName);
-		console.log("App to connect:", appToConnect);
 
 		if (appToConnect) {
 			// App found in user apps - check if token is expired
@@ -316,16 +302,26 @@ export default function SidePanel({ stepId, stepType }: SidePanelProps) {
 				const getExpiry = getTokenExpiry(appToConnect.expiresAt || 0);
 
 				if (getExpiry === "expired") {
-					console.log("Token expired — reauthenticate needed");
 					// Redirect to OAuth for re-authentication
 					window.location.href = `${process.env.NEXT_PUBLIC_URI}/api/oauth/app/${selectedStaged?.appName}?state=${userDetails.user.id}`;
 				} else {
-					console.log("Token valid — proceed as normal");
 				}
 			}
 		} else {
 			// App not found - send an auth request
-			window.location.href = `${process.env.NEXT_PUBLIC_URI}/api/oauth/app/${selectedStaged?.appName}?state=${userDetails.user.id}`;
+			const oauthUrl = `${process.env.NEXT_PUBLIC_URI}/api/oauth/app/${selectedStaged?.appName}?state=${userDetails.user.id}`;
+			const popup = window.open(oauthUrl, "oauth", "width=600,height=700");
+
+			window.addEventListener("message", (e) => {
+				if (e.data.success === true) {
+					popup?.close();
+					window.close();
+					dispatch(setStagedApp({ ...selectedStaged!, connected: true }));
+					dispatch(setCardEnabled(false));
+				}
+			});
+
+			popup?.focus();
 		}
 	}
 
@@ -479,16 +475,7 @@ export default function SidePanel({ stepId, stepType }: SidePanelProps) {
 				}
 			}
 
-			// Log webhook config for debugging
-			if (selectedStaged?.appName === "webhook") {
-				console.log("🔗 Webhook Config:", {
-					url: configToSave.url,
-					method: configToSave.method || "POST",
-					payload: configToSave.payload,
-					isSlack: configToSave.url?.includes("hooks.slack.com"),
-					payloadType: typeof configToSave.payload,
-				});
-			}
+			// Log webhook config removed for production cleanliness
 
 			const updatedStep = {
 				...currentStep,

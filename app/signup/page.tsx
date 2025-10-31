@@ -28,7 +28,6 @@ export default function Signup() {
 	 * @param e - Form submission event
 	 */
 	const handleSubmit = (e: React.FormEvent) => {
-		console.log("FORM CLICKED");
 		e.preventDefault(); // Prevent default form submission
 	};
 

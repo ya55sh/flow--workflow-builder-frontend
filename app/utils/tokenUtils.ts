@@ -86,13 +86,9 @@ export const isTokenExpired = (): boolean => {
 export const getTokenExpiry = (timer: string): string | null => {
 	const now = Date.now();
 	const expiry = new Date(timer).getTime();
-
-	console.log("now, expiry ", now, expiry);
 	if (expiry <= now) {
-		console.log("Token expired — reauthenticate needed");
 		return "expired"; // token has expired
 	} else {
-		console.log("Token still valid — proceed normally");
 		return "valid"; // token is still valid
 	}
 };
@@ -100,7 +96,6 @@ export const getTokenExpiry = (timer: string): string | null => {
 export const getAccessToken = async (appName: string): Promise<AccessTokenResponse> => {
 	try {
 		const resp = await apiClient.post(`/oauth/app/access/${appName}`, {});
-		console.log("token Req ", resp);
 
 		return resp as AccessTokenResponse;
 	} catch (err) {

@@ -73,9 +73,6 @@ export default function ProfilePage() {
 
 		try {
 			const data = await apiClient.get(API_ENDPOINTS.getUser);
-			console.log("User details fetched:", data);
-			console.log("User object:", data?.user);
-			console.log("User apps:", data?.userApp);
 
 			// Backend returns { user: {...}, userApp: [...] }
 			// Combine them into a single unified object for frontend use
@@ -84,7 +81,6 @@ export default function ProfilePage() {
 				email: data?.user?.email || "",
 				userApp: data?.userApp || [], // Array of connected integrations
 			};
-			console.log("Combined user data:", userData);
 
 			// Update both Redux store (for global access) and local state (for UI rendering)
 			dispatch(setUser(userData));

@@ -25,7 +25,6 @@ export default function Login() {
 	 * @param e - Form submission event
 	 */
 	const handleSubmit = (e: React.FormEvent) => {
-		console.log("FORM CLICKED", email, password);
 		e.preventDefault(); // Prevent default form submission
 	};
 
