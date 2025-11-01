@@ -27,7 +27,7 @@ export const API_ENDPOINTS = {
 
 	// Apps
 	getApps: process.env.NEXT_PUBLIC_GET_APPS_URI || "/workflows/apps",
-
+	deleteApp: (appName: string) => `/user/app/${appName}/delete`,
 	// Workflows
 	createWorkflow: "/workflows/create",
 	getWorkflows: "/workflows",

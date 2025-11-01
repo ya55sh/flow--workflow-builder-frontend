@@ -4,16 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import AppCard from "../components/AppCard";
 import { useDispatch, useSelector } from "react-redux";
-import {
-	setApps,
-	setWorkflow,
-	setStep,
-	setSteps,
-	setStagedApp,
-	setStagedApps,
-	addWorkflowStep,
-	setUser,
-} from "../features/workflowSlice";
+import { setApps, setWorkflow, setSteps, setStagedApps, setUser } from "../features/workflowSlice";
 import SidePanel from "../components/SidePanel";
 import { apiClient } from "../lib/api-client";
 import { API_ENDPOINTS } from "../lib/config";
@@ -23,7 +14,6 @@ import { getActionConfig, getTriggerConfig } from "../config/actionConfigs";
  * Type definition for workflow creation stages
  * Used to track progress through the workflow creation process
  */
-type StageKey = "setup" | "configure" | "test";
 
 /**
  * Create Workflow Page Component

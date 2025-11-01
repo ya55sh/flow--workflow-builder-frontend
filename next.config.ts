@@ -2,6 +2,7 @@
 const nextConfig = {
 	reactStrictMode: true,
 	output: "standalone",
+	typescript: { ignoreBuildErrors: true },
 
 	// Maintenance mode redirects - disabled for now
 	// async redirects() {

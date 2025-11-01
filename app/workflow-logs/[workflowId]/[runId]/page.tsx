@@ -65,7 +65,6 @@ export default function WorkflowRunDetailsPage() {
 		setIsLoading(true);
 		try {
 			const data: WorkflowRunDetails = await apiClient.get(API_ENDPOINTS.getWorkflowRunLogs(runId));
-			console.log("Run details fetched:", data);
 			setRunDetails(data);
 		} catch (error) {
 			console.error("Error loading run details:", error);

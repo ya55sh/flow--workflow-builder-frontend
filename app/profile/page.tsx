@@ -81,7 +81,6 @@ export default function ProfilePage() {
 				email: data?.user?.email || "",
 				userApp: data?.userApp || [], // Array of connected integrations
 			};
-
 			// Update both Redux store (for global access) and local state (for UI rendering)
 			dispatch(setUser(userData));
 			setUserState(userData);
@@ -105,6 +104,16 @@ export default function ProfilePage() {
 		}
 	};
 
+	const handleDelete = async (app: UserApp) => {
+		try {
+			await apiClient.post(API_ENDPOINTS.deleteApp(app.appName));
+			alert("App deleted successfully!");
+			loadUserDetails();
+		} catch (error) {
+			console.error("Error deleting app:", error);
+			alert("Failed to delete app. Please try again.");
+		}
+	};
 	/**
 	 * Helper: Check if an app integration's OAuth token is expired
 	 * @param app - The app integration to check
@@ -116,6 +125,38 @@ export default function ProfilePage() {
 		const expiryTime = typeof app.expiresAt === "string" ? new Date(app.expiresAt).getTime() : app.expiresAt;
 		return expiryTime <= Date.now(); // Compare with current time
 	};
+
+	function handleRefresh(event) {
+		const appName = event.target.dataset.appname;
+		const oauthUrl = `${process.env.NEXT_PUBLIC_URI}/api/oauth/app/${appName}?state=${user?.id}`;
+		const popup = window.open(oauthUrl, "oauth", "width=600,height=700");
+
+		window.addEventListener("message", async (e) => {
+			if (e.data.success === true) {
+				popup?.close();
+				window.close();
+				try {
+					const data = await apiClient.get(API_ENDPOINTS.getUser);
+
+					// Backend returns { user: {...}, userApp: [...] }
+					// Combine them into a single unified object for frontend use
+					const userData: User = {
+						id: data?.user?.id?.toString() || "",
+						email: data?.user?.email || "",
+						userApp: data?.userApp || [], // Array of connected integrations
+					};
+					// Update both Redux store (for global access) and local state (for UI rendering)
+					dispatch(setUser(userData));
+					setUserState(userData);
+				} catch (error) {
+					console.error("Error fetching user details:", error);
+					setError("Failed to load user profile. Please try again.");
+				}
+			}
+		});
+
+		popup?.focus();
+	}
 
 	// Show loading state while checking auth or fetching data
 	if (!isMounted || isLoading) {
@@ -213,8 +254,22 @@ export default function ProfilePage() {
 										key={index}
 										className="border-2 border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition-colors duration-200"
 									>
-										<div className="flex items-center justify-between mb-2">
+										<div className="flex items-center justify-between mb-2 p-2">
 											<h3 className="text-lg font-semibold text-gray-900 capitalize">{app.appName}</h3>
+											<button
+												data-appname={app.appName}
+												onClick={handleRefresh}
+												className="bg-indigo-600 cursor-pointer hover:bg-green-700 text-white p-2 py-1 rounded-lg font-medium transition-colors duration-200"
+											>
+												Refresh
+											</button>
+
+											<button
+												onClick={() => handleDelete(app)}
+												className="bg-indigo-600 cursor-pointer hover:bg-red-700 text-white p-2 py-1 rounded-lg font-medium transition-colors duration-200"
+											>
+												Delete
+											</button>
 											<div
 												className={`w-3 h-3 rounded-full ${expired ? "bg-red-500" : "bg-green-500"}`}
 												title={expired ? "Expired - Reconnection needed" : "Connected"}
