@@ -86,16 +86,6 @@ export default function Dropdown({ stepId }: DropdownProps) {
 				if (getAppExpiry === "expired") {
 					stagedPayload.expired = true;
 					appInfo.expiresAt = null;
-					dispatch(
-						setUser({
-							user: {
-								...userDetails,
-								userApp: userDetails?.userApp.map((app: App) =>
-									app.appName === selectedAppName.toLowerCase() ? appInfo : app
-								),
-							},
-						})
-					);
 				} else {
 					stagedPayload.expired = false;
 				}
