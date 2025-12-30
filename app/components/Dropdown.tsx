@@ -85,7 +85,6 @@ export default function Dropdown({ stepId }: DropdownProps) {
 				let getAppExpiry = getTokenExpiry(appInfo.expiresAt);
 				if (getAppExpiry === "expired") {
 					stagedPayload.expired = true;
-					appInfo.expiresAt = null;
 				} else {
 					stagedPayload.expired = false;
 				}
